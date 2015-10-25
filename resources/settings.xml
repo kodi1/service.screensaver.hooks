@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <!-- General -->
+    <category label="30300">
+      <setting label="30301" type="slider"     id="delay" default="1" range="1,1,60" option="int"/>
+      <setting label="30302" type="bool"       id="dbg" default="false"/>
+      <setting label="30303" type="text"       id="svr_activate" default=""/>
+      <setting label="30304" type="text"       id="svr_deactivate" default=""/>
+      <setting label="30305" type="bool"       id="if_play" default="false"/>
+      <setting label="30306" type="slider"     id="play_delay" default="15" range="1,1,60" option="int"  visible="eq(-1,true)"/>
+    </category>
+</settings>
