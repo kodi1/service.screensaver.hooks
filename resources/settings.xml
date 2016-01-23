@@ -8,5 +8,6 @@
       <setting label="30304" type="text"       id="svr_deactivate" default=""/>
       <setting label="30305" type="bool"       id="if_play" default="false"/>
       <setting label="30306" type="slider"     id="play_delay" default="15" range="1,1,60" option="int"  visible="eq(-1,true)"/>
+      <setting label="30307" type="bool"       id="if_active" default="true"/>
     </category>
 </settings>

@@ -22,7 +22,13 @@ __profile__ = xbmc.translatePath( __addon__.getAddonInfo('profile') ).decode('ut
 dbg = False
 if 'true' == __addon__.getSetting('dbg'):
   dbg = True
+
 silent = not dbg
+
+if 'true' == __addon__.getSetting('if_active'):
+  if_active = True
+else:
+  if_active = False
 
 def update(actoin):
   payload = {}
@@ -47,7 +53,7 @@ class MyMonitor(xbmc.Monitor):
   def onScreensaverActivated(self):
     start = __addon__.getSetting('svr_activate')
     if xbmc.Player().isPlaying() and 'true' == __addon__.getSetting('if_play'):
-       delay = int(__addon__.getSetting('play_delay'))
+      delay = int(__addon__.getSetting('play_delay'))
     else:
       delay = int(__addon__.getSetting('delay'))
 
@@ -56,13 +62,21 @@ class MyMonitor(xbmc.Monitor):
       log ('Start Delay %d min Exec: %s' % (delay, start))
       update('%s delay %d min' % (start, delay))
       xbmc.executebuiltin('AlarmClock (%s, System.Exec(%s), %s, %s)' % (__scriptid__, start, delay, silent))
+      self.__if_active_ts = time.time() + (delay * 60)
 
   def onScreensaverDeactivated(self):
-    if xbmc.getGlobalIdleTime() > 3:
-      return
     stop = __addon__.getSetting('svr_deactivate')
+
+    if xbmc.getGlobalIdleTime() > 3:
+        return
+
     log('Stop screensaver hook')
     xbmc.executebuiltin('CancelAlarm(%s, %s)' % (__scriptid__, silent))
+
+    if True == if_active and time.time() < self.__if_active_ts:
+      log ('Not activated skip: %s' % (stop,))
+      return
+
     if stop != '':
       log ('Stop Exec: %s' % (stop,))
       update(stop)
@@ -73,9 +87,9 @@ if __name__ == '__main__':
   update('Start')
   monitor = MyMonitor()
   while True:
-    # Sleep/wait for abort for 2 seconds
-    log ("Idle time; %d" % (xbmc.getGlobalIdleTime(),))
-    if monitor.waitForAbort(2):
+    # Sleep/wait for abort for 3 seconds
+    log ("Idle time: %d" % (xbmc.getGlobalIdleTime(),))
+    if monitor.waitForAbort(3):
       # Abort was requested while waiting. We should exit
       break
   log('Exit')
