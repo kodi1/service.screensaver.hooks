@@ -30,6 +30,11 @@ if 'true' == __addon__.getSetting('if_active'):
 else:
   if_active = False
 
+if 'true' == __addon__.getSetting('if_active_i'):
+  if_active_i = True
+else:
+  if_active_i = False
+
 def update(actoin):
   payload = {}
   payload['an'] = __scriptname__
@@ -51,36 +56,54 @@ class MyMonitor(xbmc.Monitor):
     #self.update_settings()
 
   def onScreensaverActivated(self):
-    start = __addon__.getSetting('svr_activate')
     if xbmc.Player().isPlaying() and 'true' == __addon__.getSetting('if_play'):
       delay = int(__addon__.getSetting('play_delay'))
     else:
       delay = int(__addon__.getSetting('delay'))
 
+    if xbmc.Player().isPlaying() and 'true' == __addon__.getSetting('if_play_i'):
+      delay_i = int(__addon__.getSetting('play_delay_i'))
+    else:
+      delay_i = int(__addon__.getSetting('delay'))
+
     log('Start screensaver hook')
+
+    start = __addon__.getSetting('svr_activate')
     if start != '':
       log ('Start Delay %d min Exec: %s' % (delay, start))
       update('%s delay %d min' % (start, delay))
-      xbmc.executebuiltin('AlarmClock (%s, System.Exec(%s), %s, %s)' % (__scriptid__, start, delay, silent))
+      xbmc.executebuiltin('AlarmClock (%s_cmd, System.Exec(%s), %s, %s)' % (__scriptid__, start, delay, silent))
       self.__if_active_ts = time.time() + (delay * 60)
 
-  def onScreensaverDeactivated(self):
-    stop = __addon__.getSetting('svr_deactivate')
+    start_i = __addon__.getSetting('svr_activate_i')
+    if start_i != '':
+      log ('Start Delay %d min Exec: %s' % (delay_i, start_i))
+      update('%s delay %d min' % (start_i, delay_i))
+      xbmc.executebuiltin('AlarmClock (%s_addon, RunScript(%s), %s, %s)' % (__scriptid__, start_i, delay_i, silent))
+      self.__if_active_ts_i = time.time() + (delay_i * 60)
 
+  def onScreensaverDeactivated(self):
     if xbmc.getGlobalIdleTime() > 3:
         return
 
     log('Stop screensaver hook')
-    xbmc.executebuiltin('CancelAlarm(%s, %s)' % (__scriptid__, silent))
+    xbmc.executebuiltin('CancelAlarm(%s_cmd, %s)' % (__scriptid__, silent))
+    xbmc.executebuiltin('CancelAlarm(%s_addon, %s)' % (__scriptid__, silent))
 
-    if True == if_active and time.time() < self.__if_active_ts:
-      log ('Not activated skip: %s' % (stop,))
-      return
-
-    if stop != '':
+    stop = __addon__.getSetting('svr_deactivate')
+    if stop != '' and (False == if_active or time.time() > self.__if_active_ts):
       log ('Stop Exec: %s' % (stop,))
       update(stop)
       xbmc.executebuiltin('System.Exec(%s)' % (stop))
+    else:
+      log ('Not activated skip: %s' % (stop,))
+
+      stop_i = __addon__.getSetting('svr_deactivate_i')
+      if stop_i != '' and (False == if_active_i or time.time() > self.__if_active_ts_i):
+        log ('Stop Exec: %s' % (stop_i,))
+        xbmc.executebuiltin('RunScript(%s)' % (stop_i))
+      else:
+        log ('Not activated skip: %s' % (stop_i,))
 
 if __name__ == '__main__':
   log('Monitor strt')
