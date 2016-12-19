@@ -15,5 +15,7 @@
       <setting label="30311" type="bool"       id="if_play_i" default="false"/>
       <setting label="30312" type="slider"     id="play_delay_i" default="15" range="1,1,60" option="int"  visible="eq(-1,true)"/>
       <setting label="30313" type="bool"       id="if_active_i" default="true"/>
+      <setting label="30314" type="text"       id="svr_activate_instant" default=""/>
+      <setting label="30315" type="text"       id="svr_deactivate_instant" default=""/>
     </category>
 </settings>

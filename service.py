@@ -82,8 +82,15 @@ class MyMonitor(xbmc.Monitor):
       xbmc.executebuiltin('AlarmClock (%s_addon, RunScript(%s), %s, %s)' % (__scriptid__, start_i, delay_i, silent))
       self.__if_active_ts_i = time.time() + (delay_i * 60)
 
+    start_ = __addon__.getSetting('svr_activate_instant')
+    if start_ != '':
+      log ('Start Exec: %s' % (start_,))
+      update('%s instant' % (start_,))
+      os.system('%s' % (start_,))
+      #xbmc.executebuiltin('System.Exec(%s)' % start_)
+
   def onScreensaverDeactivated(self):
-    if xbmc.getGlobalIdleTime() > 3:
+    if xbmc.getGlobalIdleTime() > 6:
         return
 
     log('Stop screensaver hook')
@@ -104,6 +111,13 @@ class MyMonitor(xbmc.Monitor):
         xbmc.executebuiltin('RunScript(%s)' % (stop_i))
       else:
         log ('Not activated skip: %s' % (stop_i,))
+
+    stop_ = __addon__.getSetting('svr_deactivate_instant')
+    if stop_ != '':
+      log ('Start Exec: %s' % (stop_,))
+      update('%s instant' % (stop_,))
+      os.system('%s' % (stop_,))
+      #xbmc.executebuiltin('System.Exec(%s)' % stop_)
 
 if __name__ == '__main__':
   log('Monitor strt')
