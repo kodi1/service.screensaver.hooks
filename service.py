@@ -7,17 +7,19 @@ import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
+import xbmcvfs
 from ga import ga
+import simplejson as json
 
 __addon__ = xbmcaddon.Addon()
 __author__ = __addon__.getAddonInfo('author')
 __scriptid__ = __addon__.getAddonInfo('id')
 __scriptname__ = __addon__.getAddonInfo('name')
 __version__ = __addon__.getAddonInfo('version')
-__icon__ = __addon__.getAddonInfo('icon').decode('utf-8')
+__icon__ = __addon__.getAddonInfo('icon')
 __language__ = __addon__.getLocalizedString
-__cwd__ = xbmc.translatePath( __addon__.getAddonInfo('path') ).decode('utf-8')
-__profile__ = xbmc.translatePath( __addon__.getAddonInfo('profile') ).decode('utf-8')
+__cwd__ = xbmcvfs.translatePath( __addon__.getAddonInfo('path') )
+__profile__ = xbmcvfs.translatePath( __addon__.getAddonInfo('profile') )
 
 dbg = False
 if 'true' == __addon__.getSetting('dbg'):
@@ -46,11 +48,20 @@ def update(actoin):
 
 def log(msg):
   if dbg == True:
-    xbmc.log((u"%s *** %s" % (__scriptid__, msg,)).encode('utf-8'),level=xbmc.LOGNOTICE)
+    xbmc.log(("%s *** %s" % (__scriptid__, msg,)),level=xbmc.LOGNOTICE)
 
 class MyMonitor(xbmc.Monitor):
   def __init__(self, *args, **kwargs):
     xbmc.Monitor.__init__(self)
+
+    self.__idle_t = 'System.IdleTime(5)'
+    self.__idle_json = {
+                    "jsonrpc": "2.0",
+                    "method": "XBMC.GetInfoBooleans",
+                    "params": {
+                                "booleans": [self.__idle_t,]
+                              },
+                    "id": 1}
 
   #def onSettingsChanged(self):
     #self.update_settings()
@@ -90,10 +101,22 @@ class MyMonitor(xbmc.Monitor):
       #xbmc.executebuiltin('System.Exec(%s)' % start_)
 
   def onScreensaverDeactivated(self):
-    if xbmc.getGlobalIdleTime() > 6:
+    log('Stop screensaver hook')
+
+    stop_ = __addon__.getSetting('svr_deactivate_instant')
+    if stop_ != '':
+      log ('Start Exec: %s' % (stop_,))
+      update('%s instant' % (stop_,))
+      os.system('%s' % (stop_,))
+      #xbmc.executebuiltin('System.Exec(%s)' % stop_)
+
+    xbmc.sleep(1000)
+    _data = json.loads(xbmc.executeJSONRPC(json.dumps(self.__idle_json)))
+    log ('joson responce: %s' % (_data))
+    if _data['result'][self.__idle_t]:
+        log ('%s -> True' % (self.__idle_t))
         return
 
-    log('Stop screensaver hook')
     xbmc.executebuiltin('CancelAlarm(%s_cmd, %s)' % (__scriptid__, silent))
     xbmc.executebuiltin('CancelAlarm(%s_addon, %s)' % (__scriptid__, silent))
 
@@ -111,13 +134,6 @@ class MyMonitor(xbmc.Monitor):
         xbmc.executebuiltin('RunScript(%s)' % (stop_i))
       else:
         log ('Not activated skip: %s' % (stop_i,))
-
-    stop_ = __addon__.getSetting('svr_deactivate_instant')
-    if stop_ != '':
-      log ('Start Exec: %s' % (stop_,))
-      update('%s instant' % (stop_,))
-      os.system('%s' % (stop_,))
-      #xbmc.executebuiltin('System.Exec(%s)' % stop_)
 
 if __name__ == '__main__':
   log('Monitor strt')
